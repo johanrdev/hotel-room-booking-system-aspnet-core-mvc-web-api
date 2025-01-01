@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="flex items-center justify-center flex-grow">
       <div class="w-full max-w-md p-8 bg-white rounded shadow-md">
         <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Login</h1>
         <form @submit.prevent="login" class="space-y-4">
@@ -37,7 +37,7 @@
           });
           const authStore = useAuthStore();
           authStore.setAuthenticated(true);
-          this.$router.push('/profile');
+          this.$router.push('/account');
         } catch (error) {
           console.error('Login failed', error);
         }

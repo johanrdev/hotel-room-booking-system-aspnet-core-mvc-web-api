@@ -117,31 +117,6 @@ namespace HotelBookingSystem.API.Controllers
         }
 
         [Authorize]
-        [HttpGet("profile")]
-        public async Task<IActionResult> GetProfile()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized("User ID is empty");
-            }
-
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                return NotFound("User not found");
-            }
-
-            var profile = new
-            {
-                Username = user.UserName,
-                Email = user.Email
-            };
-
-            return Ok(profile);
-        }
-
-        [Authorize]
         [HttpPost("logout")]
         public IActionResult Logout()
         {
@@ -192,15 +167,22 @@ namespace HotelBookingSystem.API.Controllers
 
         [Authorize]
         [HttpGet("check-auth")]
-        public IActionResult CheckAuth()
+        public async Task<IActionResult> CheckAuth()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole("Admin");
 
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
             return Ok(new
             {
                 isAuthenticated = true,
-                isAdmin = isAdmin
+                isAdmin = isAdmin,
+                username = user.UserName
             });
         }
     }

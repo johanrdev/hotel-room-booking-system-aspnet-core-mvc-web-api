@@ -6,6 +6,7 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: false,
     isLoading: true,
     isAdmin: false,
+    username: '', // Add username to the state
   }),
   actions: {
     async checkAuth() {
@@ -13,9 +14,11 @@ export const useAuthStore = defineStore('auth', {
         const response = await axiosInstance.get('/auth/check-auth');
         this.isAuthenticated = response.data.isAuthenticated;
         this.isAdmin = response.data.isAdmin;
+        this.username = response.data.username; // Set the username
       } catch (error) {
         this.isAuthenticated = false;
         this.isAdmin = false;
+        this.username = ''; // Reset the username
       } finally {
         this.isLoading = false;
       }
@@ -28,6 +31,7 @@ export const useAuthStore = defineStore('auth', {
       this.isAuthenticated = false;
       this.isLoading = true;
       this.isAdmin = false;
+      this.username = ''; // Reset the username
     }
   }
 });

@@ -1,8 +1,7 @@
 <template>
     <div class="container mx-auto mt-8">
-      <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Profile</h1>
-      <p class="text-center mb-4">Welcome, {{ username }}</p>
-      
+      <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">My Bookings</h1>
+  
       <div v-if="isLoading" class="text-center">Loading bookings...</div>
       <div v-if="!isLoading && bookings.length === 0" class="text-center">No bookings available</div>
       <div v-if="!isLoading && bookings.length > 0">
@@ -44,25 +43,14 @@
   export default {
     data() {
       return {
-        username: '',
         bookings: [],
         isLoading: true,
       };
     },
     async created() {
-      await this.fetchProfile();
       await this.fetchBookings();
     },
     methods: {
-      async fetchProfile() {
-        try {
-          const response = await axiosInstance.get('/auth/profile');
-          this.username = response.data.username;
-        } catch (error) {
-          console.error('Failed to fetch profile', error);
-          this.$router.push('/login');
-        }
-      },
       async fetchBookings() {
         try {
           const response = await axiosInstance.get('/booking/user');
@@ -102,3 +90,4 @@
     }
   };
   </script>
+  
