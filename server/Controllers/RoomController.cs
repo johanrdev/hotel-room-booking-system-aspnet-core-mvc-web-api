@@ -95,12 +95,12 @@ namespace HotelBookingSystem.API.Controllers
         [HttpGet("roomtypes")]
         public async Task<ActionResult<IEnumerable<RoomTypeDTO>>> GetRoomTypes()
         {
-            var roomTypes = await _context.Rooms
-                .GroupBy(r => r.Type)
-                .Select(g => new RoomTypeDTO
+            var roomTypes = await _context.RoomTypes
+                .Select(rt => new RoomTypeDTO
                 {
-                    Name = g.Key,
-                    Price = g.First().Price
+                    Name = rt.Name,
+                    Price = rt.Price,
+                    Description = rt.Description
                 })
                 .ToListAsync();
 
@@ -110,9 +110,17 @@ namespace HotelBookingSystem.API.Controllers
         [HttpGet("available/{type}")]
         public async Task<ActionResult<IEnumerable<Room>>> GetAvailableRoomsByType(string type)
         {
+            var roomType = await _context.RoomTypes
+                .FirstOrDefaultAsync(rt => rt.Name == type);
+            if (roomType == null)
+            {
+                return BadRequest("Invalid room type.");
+            }
+
             var availableRooms = await _context.Rooms
-                .Where(r => r.IsAvailable && r.Type == type)
+                .Where(r => r.IsAvailable && r.RoomTypeId == roomType.Id)
                 .ToListAsync();
+
             return Ok(availableRooms);
         }
 
@@ -122,8 +130,10 @@ namespace HotelBookingSystem.API.Controllers
         }
     }
 
-    public class RoomTypeDTO {
+    public class RoomTypeDTO
+    {
         public string Name { get; set; } = string.Empty;
         public double Price { get; set; }
+        public string Description { get; set; } = string.Empty;
     }
 }

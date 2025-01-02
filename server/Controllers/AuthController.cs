@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using HotelBookingSystem.API.Models;
-using HotelBookingSystem.Models;
 
 namespace HotelBookingSystem.API.Controllers
 {
@@ -30,9 +29,16 @@ namespace HotelBookingSystem.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] User model)
         {
+            if (model == null || string.IsNullOrEmpty(model.UserName))
+            {
+                return BadRequest("Invalid user data.");
+            }
+
             var userExists = await _userManager.FindByNameAsync(model.UserName);
             if (userExists != null)
+            {
                 return StatusCode(500, new { Status = "Error", Message = "User already exists!" });
+            }
 
             IdentityUser user = new IdentityUser()
             {
@@ -42,20 +48,31 @@ namespace HotelBookingSystem.API.Controllers
             };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
+            {
                 return StatusCode(500, new { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+            }
 
             if (!await _roleManager.RoleExistsAsync("Guest"))
+            {
                 await _roleManager.CreateAsync(new IdentityRole("Guest"));
-            
+            }
+
             if (await _roleManager.RoleExistsAsync("Guest"))
+            {
                 await _userManager.AddToRoleAsync(user, "Guest");
+            }
 
             return Ok(new { Status = "Success", Message = "User created successfully!" });
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest login)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO login)
         {
+            if (login == null || string.IsNullOrEmpty(login.UserName))
+            {
+                return BadRequest("Invalid login data.");
+            }
+
             var user = await _userManager.FindByNameAsync(login.UserName);
             if (user != null && await _userManager.CheckPasswordAsync(user, login.Password))
             {
@@ -89,13 +106,20 @@ namespace HotelBookingSystem.API.Controllers
             return Unauthorized();
         }
 
-        [Authorize(Roles = "Admin")]
+       [Authorize(Roles = "Admin")]
         [HttpPost("register-admin")]
         public async Task<IActionResult> RegisterAdmin([FromBody] User model)
         {
+            if (model == null || string.IsNullOrEmpty(model.UserName))
+            {
+                return BadRequest("Invalid user data.");
+            }
+
             var userExists = await _userManager.FindByNameAsync(model.UserName);
             if (userExists != null)
+            {
                 return StatusCode(500, new { Status = "Error", Message = "User already exists!" });
+            }
 
             IdentityUser user = new IdentityUser()
             {
@@ -105,13 +129,19 @@ namespace HotelBookingSystem.API.Controllers
             };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
+            {
                 return StatusCode(500, new { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+            }
 
             if (!await _roleManager.RoleExistsAsync("Admin"))
+            {
                 await _roleManager.CreateAsync(new IdentityRole("Admin"));
+            }
 
             if (await _roleManager.RoleExistsAsync("Admin"))
+            {
                 await _userManager.AddToRoleAsync(user, "Admin");
+            }
 
             return Ok(new { Status = "Success", Message = "Admin user created successfully!" });
         }
@@ -170,13 +200,18 @@ namespace HotelBookingSystem.API.Controllers
         public async Task<IActionResult> CheckAuth()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var isAdmin = User.IsInRole("Admin");
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return Unauthorized();
             }
+
+            var isAdmin = User.IsInRole("Admin");
 
             return Ok(new
             {
@@ -185,5 +220,11 @@ namespace HotelBookingSystem.API.Controllers
                 username = user.UserName
             });
         }
+    }
+
+    public class LoginRequestDTO
+    {
+        public string UserName { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

@@ -132,8 +132,15 @@ namespace HotelBookingSystem.API.Controllers
                 return BadRequest("User does not exist.");
             }
 
+            var roomType = await _context.RoomTypes
+                .FirstOrDefaultAsync(rt => rt.Name == bookingCreateDTO.RoomType);
+            if (roomType == null)
+            {
+                return BadRequest("Room type does not exist.");
+            }
+
             var availableRoom = await _context.Rooms
-                .Where(room => room.Type == bookingCreateDTO.RoomType)
+                .Where(room => room.RoomTypeId == roomType.Id)
                 .Where(room => !_context.Bookings.Any(b =>
                     b.RoomId == room.Id &&
                     b.CheckInDate < bookingCreateDTO.CheckOutDate &&
@@ -177,8 +184,10 @@ namespace HotelBookingSystem.API.Controllers
         {
             var bookings = await _context.Bookings
                 .Include(b => b.Room)
+                    .ThenInclude(r => r.RoomType)
                 .Include(b => b.User)
                 .ToListAsync();
+
             return Ok(bookings);
         }
 
@@ -205,7 +214,7 @@ namespace HotelBookingSystem.API.Controllers
             }
 
             var availableRoom = await _context.Rooms
-                .Where(r => r.Type == room.Type && r.Id == room.Id)
+                .Where(r => r.RoomTypeId == room.RoomTypeId && r.Id == room.Id)
                 .Where(r => !_context.Bookings.Any(b =>
                     b.RoomId == r.Id &&
                     b.CheckInDate < bookingUpdateDTO.CheckOutDate &&
@@ -265,32 +274,87 @@ namespace HotelBookingSystem.API.Controllers
         }
 
         [HttpGet("rooms")]
-        public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
+        public async Task<ActionResult<IEnumerable<AdminRoomDTO>>> GetRooms()
         {
-            var rooms = await _context.Rooms.ToListAsync();
-            return Ok(rooms);
+            var rooms = await _context.Rooms
+                .Include(r => r.RoomType) // Inkludera RoomType
+                .ToListAsync();
+
+            var roomDTOs = rooms.Select(room => new AdminRoomDTO
+            {
+                Id = room.Id,
+                Number = room.Number,
+                RoomType = room.RoomType != null ? new AdminRoomTypeDTO
+                {
+                    Id = room.RoomType.Id,
+                    Name = room.RoomType.Name,
+                    Description = room.RoomType.Description,
+                    Price = room.RoomType.Price
+                } : null,
+                IsAvailable = room.IsAvailable
+            });
+
+            return Ok(roomDTOs);
         }
 
-        [HttpGet("available-rooms")]
-        public async Task<ActionResult<IEnumerable<Room>>> GetAvailableRooms()
+        [HttpGet("rooms/{id}")]
+        public async Task<ActionResult<AdminRoomDTO>> GetRoomById(int id)
         {
-            var rooms = await _context.Rooms.ToListAsync();
-            return Ok(rooms);
-        }
-
-        [HttpPut("rooms/{id}")]
-        public async Task<IActionResult> UpdateRoom(int id, AdminRoomUpdateDTO roomUpdateDTO)
-        {
-            var room = await _context.Rooms.FindAsync(id);
+            var room = await _context.Rooms
+                .Include(r => r.RoomType)
+                .FirstOrDefaultAsync(r => r.Id == id);
 
             if (room == null)
             {
                 return NotFound();
             }
 
+            var roomDTO = new AdminRoomDTO
+            {
+                Id = room.Id,
+                Number = room.Number,
+                RoomType = room.RoomType != null ? new AdminRoomTypeDTO
+                {
+                    Id = room.RoomType.Id,
+                    Name = room.RoomType.Name,
+                    Description = room.RoomType.Description,
+                    Price = room.RoomType.Price
+                } : null,
+                IsAvailable = room.IsAvailable
+            };
+
+            return Ok(roomDTO);
+        }
+
+        [HttpGet("available-rooms")]
+        public async Task<ActionResult<IEnumerable<Room>>> GetAvailableRooms()
+        {
+            var rooms = await _context.Rooms
+                .Include(r => r.RoomType)
+                .ToListAsync();
+            return Ok(rooms);
+        }
+
+        [HttpPut("rooms/{id}")]
+        public async Task<IActionResult> UpdateRoom(int id, AdminRoomUpdateDTO roomUpdateDTO)
+        {
+            var room = await _context.Rooms
+                .Include(r => r.RoomType)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (room == null)
+            {
+                return NotFound();
+            }
+
+            var roomType = await _context.RoomTypes.FirstOrDefaultAsync(rt => rt.Id == roomUpdateDTO.RoomTypeId);
+            if (roomType == null)
+            {
+                return BadRequest("Invalid room type.");
+            }
+
             room.Number = roomUpdateDTO.Number;
-            room.Type = roomUpdateDTO.Type;
-            room.Price = roomUpdateDTO.Price;
+            room.RoomTypeId = roomType.Id;
             room.IsAvailable = roomUpdateDTO.IsAvailable;
 
             _context.Entry(room).State = EntityState.Modified;
@@ -304,24 +368,57 @@ namespace HotelBookingSystem.API.Controllers
                 return BadRequest("Failed to update room.");
             }
 
-            return Ok(room);
+            var roomDTO = new AdminRoomDTO
+            {
+                Id = room.Id,
+                Number = room.Number,
+                RoomType = new AdminRoomTypeDTO
+                {
+                    Id = roomType.Id,
+                    Name = roomType.Name,
+                    Description = roomType.Description,
+                    Price = roomType.Price
+                },
+                IsAvailable = room.IsAvailable
+            };
+
+            return Ok(roomDTO);
         }
 
         [HttpPost("rooms")]
-        public async Task<ActionResult<Room>> CreateRoom(AdminRoomCreateDTO roomCreateDTO)
+        public async Task<ActionResult<AdminRoomDTO>> CreateRoom(AdminRoomCreateDTO roomCreateDTO)
         {
+            var roomType = await _context.RoomTypes.FirstOrDefaultAsync(rt => rt.Id == roomCreateDTO.RoomTypeId);
+            if (roomType == null)
+            {
+                return BadRequest("Invalid room type.");
+            }
+
             var room = new Room
             {
                 Number = roomCreateDTO.Number,
-                Type = roomCreateDTO.Type,
-                Price = roomCreateDTO.Price,
+                RoomTypeId = roomType.Id,
                 IsAvailable = roomCreateDTO.IsAvailable
             };
 
             _context.Rooms.Add(room);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetRooms), new { id = room.Id }, room);
+            var roomDTO = new AdminRoomDTO
+            {
+                Id = room.Id,
+                Number = room.Number,
+                RoomType = new AdminRoomTypeDTO
+                {
+                    Id = roomType.Id,
+                    Name = roomType.Name,
+                    Description = roomType.Description,
+                    Price = roomType.Price
+                },
+                IsAvailable = room.IsAvailable
+            };
+
+            return CreatedAtAction(nameof(GetRoomById), new { id = room.Id }, roomDTO);
         }
 
         [HttpDelete("rooms/{id}")]
@@ -349,11 +446,16 @@ namespace HotelBookingSystem.API.Controllers
         }
 
         [HttpGet("room-types")]
-        public async Task<ActionResult<IEnumerable<string>>> GetRoomTypes()
+        public async Task<ActionResult<IEnumerable<RoomTypeDTO>>> GetRoomTypes()
         {
-            var roomTypes = await _context.Rooms
-                .Select(r => r.Type)
-                .Distinct()
+            var roomTypes = await _context.RoomTypes
+                .Select(rt => new AdminRoomTypeDTO
+                {
+                    Id = rt.Id,
+                    Name = rt.Name,
+                    Description = rt.Description,
+                    Price = rt.Price
+                })
                 .ToListAsync();
 
             return Ok(roomTypes);
@@ -397,10 +499,18 @@ namespace HotelBookingSystem.API.Controllers
         public string UserId { get; set; } = string.Empty;
     }
 
+    public class AdminRoomDTO
+    {
+        public int Id { get; set; }
+        public string Number { get; set; } = string.Empty;
+        public AdminRoomTypeDTO? RoomType { get; set; }
+        public bool IsAvailable { get; set; }
+    }
+
     public class AdminRoomUpdateDTO
     {
         public string Number { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
+        public int RoomTypeId { get; set; }
         public double Price { get; set; }
         public bool IsAvailable { get; set; }
     }
@@ -408,8 +518,16 @@ namespace HotelBookingSystem.API.Controllers
     public class AdminRoomCreateDTO
     {
         public string Number { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
+        public int RoomTypeId { get; set; }
         public double Price { get; set; }
         public bool IsAvailable { get; set; }
+    }
+
+    public class AdminRoomTypeDTO
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public double Price { get; set; }
     }
 }

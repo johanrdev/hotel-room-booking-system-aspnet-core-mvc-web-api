@@ -3,7 +3,7 @@
       <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Room Types</h1>
       <div v-if="isLoading" class="text-center">Loading room types...</div>
       <div v-if="!isLoading && roomTypes.length === 0" class="text-center">No room types available</div>
-      <div v-if="!isLoading && roomTypes.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div v-if="!isLoading && roomTypes.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div v-for="type in roomTypes" :key="type.id" class="p-4 bg-white rounded shadow-md">
           <h2 class="text-xl font-bold">{{ type.name }}</h2>
           <p>Price per night: ${{ type.price }}</p>

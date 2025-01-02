@@ -62,8 +62,15 @@ namespace HotelBookingSystem.API.Controllers {
                 return Unauthorized("User is not authenticated.");
             }
 
+            var roomType = await _context.RoomTypes
+                .FirstOrDefaultAsync(rt => rt.Name == bookingCreateDTO.RoomType);
+            if (roomType == null)
+            {
+                return BadRequest("Invalid room type.");
+            }
+
             var availableRoom = await _context.Rooms
-                .Where(room => room.Type == bookingCreateDTO.RoomType)
+                .Where(room => room.RoomTypeId == roomType.Id)
                 .Where(room => !_context.Bookings.Any(b =>
                     b.RoomId == room.Id &&
                     b.CheckInDate < bookingCreateDTO.CheckOutDate &&
@@ -165,6 +172,7 @@ namespace HotelBookingSystem.API.Controllers {
 
             var bookings = await _context.Bookings
                 .Include(b => b.Room)
+                .ThenInclude(b => b.RoomType)
                 .Where(b => b.UserId == userId)
                 .ToListAsync();
 
