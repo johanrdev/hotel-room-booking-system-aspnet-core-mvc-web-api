@@ -28,12 +28,14 @@ namespace HotelBookingSystem.API.Controllers
             var totalUsers = await _context.Users.CountAsync();
             var totalBookings = await _context.Bookings.CountAsync();
             var totalRooms = await _context.Rooms.CountAsync();
+            var totalRoomTypes = await _context.RoomTypes.CountAsync();
 
             var data = new AdminDashboardDataDTO
             {
                 TotalUsers = totalUsers,
                 TotalBookings = totalBookings,
-                TotalRooms = totalRooms
+                TotalRooms = totalRooms,
+                TotalRoomTypes = totalRoomTypes
             };
 
             return Ok(data);
@@ -446,7 +448,7 @@ namespace HotelBookingSystem.API.Controllers
         }
 
         [HttpGet("room-types")]
-        public async Task<ActionResult<IEnumerable<RoomTypeDTO>>> GetRoomTypes()
+        public async Task<ActionResult<IEnumerable<AdminRoomTypeDTO>>> GetRoomTypes()
         {
             var roomTypes = await _context.RoomTypes
                 .Select(rt => new AdminRoomTypeDTO
@@ -460,6 +462,95 @@ namespace HotelBookingSystem.API.Controllers
 
             return Ok(roomTypes);
         }
+
+        [HttpDelete("room-types/{id}")]
+        public async Task<IActionResult> DeleteRoomType(int id)
+        {
+            var roomType = await _context.RoomTypes.FindAsync(id);
+
+            if (roomType == null)
+            {
+                return NotFound();
+            }
+
+            _context.RoomTypes.Remove(roomType);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return BadRequest("Failed to delete room type.");
+            }
+
+            return NoContent();
+        }
+
+        [HttpPost("room-types")]
+        public async Task<ActionResult<AdminRoomTypeDTO>> CreateRoomType(AdminRoomTypeCreateDTO roomTypeCreateDTO)
+        {
+            var roomType = new RoomType
+            {
+                Name = roomTypeCreateDTO.Name,
+                Description = roomTypeCreateDTO.Description,
+                Price = roomTypeCreateDTO.Price
+            };
+
+            _context.RoomTypes.Add(roomType);
+            await _context.SaveChangesAsync();
+
+            var roomTypeDTO = new AdminRoomTypeDTO
+            {
+                Id = roomType.Id,
+                Name = roomType.Name,
+                Description = roomType.Description,
+                Price = roomType.Price
+            };
+
+            return CreatedAtAction(nameof(GetRoomTypes), new { id = roomType.Id }, roomTypeDTO);
+        }
+
+        [HttpPut("room-types/{id}")]
+        public async Task<IActionResult> UpdateRoomType(int id, AdminRoomTypeUpdateDTO roomTypeUpdateDTO)
+        {
+            if (id != roomTypeUpdateDTO.Id)
+            {
+                return BadRequest("Room type ID mismatch.");
+            }
+
+            var roomType = await _context.RoomTypes.FindAsync(id);
+
+            if (roomType == null)
+            {
+                return NotFound();
+            }
+
+            roomType.Name = roomTypeUpdateDTO.Name;
+            roomType.Description = roomTypeUpdateDTO.Description;
+            roomType.Price = roomTypeUpdateDTO.Price;
+
+            _context.Entry(roomType).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return BadRequest("Failed to update room type.");
+            }
+
+            var roomTypeDTO = new AdminRoomTypeDTO
+            {
+                Id = roomType.Id,
+                Name = roomType.Name,
+                Description = roomType.Description,
+                Price = roomType.Price
+            };
+
+            return Ok(roomTypeDTO);
+        }
     }
 
     public class AdminDashboardDataDTO
@@ -467,6 +558,7 @@ namespace HotelBookingSystem.API.Controllers
         public int TotalUsers { get; set; }
         public int TotalBookings { get; set; }
         public int TotalRooms { get; set; }
+        public int TotalRoomTypes { get; set; }
     }
 
     public class AdminUserUpdateDTO
@@ -524,6 +616,21 @@ namespace HotelBookingSystem.API.Controllers
     }
 
     public class AdminRoomTypeDTO
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public double Price { get; set; }
+    }
+
+    public class AdminRoomTypeCreateDTO
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public double Price { get; set; }
+    }
+
+    public class AdminRoomTypeUpdateDTO
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;

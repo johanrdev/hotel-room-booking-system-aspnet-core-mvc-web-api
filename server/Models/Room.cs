@@ -3,7 +3,7 @@ namespace HotelBookingSystem.API.Models {
     {
         public int Id { get; set; }
         public string Number { get; set; } = string.Empty;
-        public int RoomTypeId { get; set; }
+        public int? RoomTypeId { get; set; }
         public RoomType? RoomType { get; set; }
         public bool IsAvailable { get; set; }
     }

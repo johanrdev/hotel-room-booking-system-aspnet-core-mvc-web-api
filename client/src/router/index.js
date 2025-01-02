@@ -8,6 +8,7 @@ import AdminDashboardView from '../views/admin/DashboardView.vue';
 import ManageUsersView from '../views/admin/ManageUsersView.vue';
 import ManageBookingsView from '../views/admin/ManageBookingsView.vue';
 import ManageRoomsView from '../views/admin/ManageRoomsView.vue';
+import ManageRoomTypesView from '../views/admin/ManageRoomTypesView.vue';  // Import the new view
 import UserBookingsView from '../views/UserBookingsView.vue';
 import axiosInstance from '../axiosInstance';
 
@@ -17,11 +18,12 @@ const routes = [
   { path: '/register', name: 'Register', component: RegisterView },
   { path: '/account', name: 'Account', component: AccountView },
   { path: '/bookings', name: 'MyBookings', component: UserBookingsView },
-  { path: '/roomtypes', name: 'RoomTypes', component: RoomTypeView },
+  { path: '/room-types', name: 'RoomTypes', component: RoomTypeView },
   { path: '/admin', name: 'Admin', component: AdminDashboardView, meta: { requiresAdmin: true } },
   { path: '/admin/manage-users', name: 'ManageUsers', component: ManageUsersView, meta: { requiresAdmin: true } },
   { path: '/admin/manage-bookings', name: 'ManageBookings', component: ManageBookingsView, meta: { requiresAdmin: true } },
   { path: '/admin/manage-rooms', name: 'ManageRooms', component: ManageRoomsView, meta: { requiresAdmin: true } },
+  { path: '/admin/manage-room-types', name: 'ManageRoomTypes', component: ManageRoomTypesView, meta: { requiresAdmin: true } },  // Add the new route
 ];
 
 const router = createRouter({
@@ -30,7 +32,7 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
-  const authRequiredForRoutes = ['/account', '/bookings', '/admin', '/admin/manage-users', '/admin/manage-bookings', '/admin/manage-rooms'];
+  const authRequiredForRoutes = ['/account', '/bookings', '/admin', '/admin/manage-users', '/admin/manage-bookings', '/admin/manage-rooms', '/admin/manage-room-types'];
   const guestOnlyRoutes = ['/login', '/register'];
   const authRequired = authRequiredForRoutes.includes(to.path);
   const guestOnly = guestOnlyRoutes.includes(to.path);

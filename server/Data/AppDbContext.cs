@@ -22,7 +22,14 @@ namespace HotelBookingSystem.API.Data {
             modelBuilder.Entity<Room>()
                 .HasOne(r => r.RoomType)
                 .WithMany()
-                .HasForeignKey(r => r.RoomTypeId);
+                .HasForeignKey(r => r.RoomTypeId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.Room)
+                .WithMany()
+                .HasForeignKey(b => b.RoomId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

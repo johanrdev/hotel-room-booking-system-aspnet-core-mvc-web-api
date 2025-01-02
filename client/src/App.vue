@@ -7,7 +7,7 @@
           Loading...
         </div>
         <div class="hidden sm:flex items-center" v-else>
-          <router-link class="mr-4" to="/roomtypes">Rooms</router-link>
+          <router-link class="mr-4" to="/room-types">Rooms</router-link>
           <router-link v-if="!authStore.isAuthenticated" class="mr-4" to="/login">Login</router-link>
           <router-link v-if="!authStore.isAuthenticated" class="mr-4" to="/register">Register</router-link>
           <div v-if="authStore.isAuthenticated" class="relative inline-block text-left">
@@ -43,7 +43,7 @@
 
       <div class="fixed top-16 left-0 right-0 z-30 flex flex-col sm:hidden bg-gray-900" :class="{'block': isMobileMenuOpen, 'hidden': !isMobileMenuOpen}" ref="mobileMenu">
         <div class="container mx-auto p-2">
-          <router-link @click.native="closeMobileMenu" to="/roomtypes" class="block text-sm p-2 text-white hover:bg-yellow-600" role="menuitem">Rooms</router-link>
+          <router-link @click.native="closeMobileMenu" to="/room-types" class="block text-sm p-2 text-white hover:bg-yellow-600" role="menuitem">Rooms</router-link>
           <router-link v-if="!authStore.isAuthenticated" @click.native="closeMobileMenu" to="/login" class="block text-sm p-2 text-white hover:bg-yellow-600" role="menuitem">Login</router-link>
           <router-link v-if="!authStore.isAuthenticated" @click.native="closeMobileMenu" to="/register" class="block text-sm p-2 text-white hover:bg-yellow-600" role="menuitem">Register</router-link>
           <router-link v-if="authStore.isAuthenticated" @click.native="closeMobileMenu" to="/account" class="block text-sm p-2 text-white hover:bg-yellow-600" role="menuitem">My Account</router-link>
