@@ -100,7 +100,8 @@ namespace HotelBookingSystem.API.Controllers
                 {
                     Name = rt.Name,
                     Price = rt.Price,
-                    Description = rt.Description
+                    Description = rt.Description,
+                    ImageUrl = rt.ImageUrl
                 })
                 .ToListAsync();
 
@@ -135,5 +136,6 @@ namespace HotelBookingSystem.API.Controllers
         public string Name { get; set; } = string.Empty;
         public double Price { get; set; }
         public string Description { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
     }
 }

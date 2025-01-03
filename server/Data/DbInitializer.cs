@@ -12,9 +12,9 @@ public static class DbInitializer
 
         var roomTypes = new RoomType[]
         {
-            new RoomType { Name = "Single", Description = "A single room with one bed.", Price = 100.0 },
-            new RoomType { Name = "Double", Description = "A double room with two beds.", Price = 150.0 },
-            new RoomType { Name = "Suite", Description = "A suite with a living area.", Price = 250.0 }
+            new RoomType { Name = "Single", Description = "A single room with one bed.", Price = 100.0, ImageUrl = "single.jpg" },
+            new RoomType { Name = "Double", Description = "A double room with two beds.", Price = 150.0, ImageUrl = "double.jpg" },
+            new RoomType { Name = "Suite", Description = "A suite with a living area.", Price = 250.0, ImageUrl = "suite.jpg" }
         };
 
         foreach (var roomType in roomTypes)
